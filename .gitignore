@@ -1,15 +1,125 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+# === System / OS ===
+# macOS
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~ 
+
+# === IDE / Editor ===
+# IntelliJ / Android Studio
+/.idea/
+/.idea/*
+*.iml
+*.iws
+out/
+captures/
+
+# VS Code
+.vscode/
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# === Build tools / dependencies / caches ===
+# Gradle
+/.gradle/
+/gradle-app.setting
+gradle-wrapper.jar
+
+# Gradle build outputs
+**/build/
+**/out/
+
+# Maven
+target/
+
+# Kotlin/Native
+.konan/
+*.klib
+*.kexe
+*.kotlin_module
+/.cinterop/
+
+# Kotlin compiler/build caches
+.cache/
+kotlin-daemon.*
+kotlin-compiler-*.log
+
+# === Generated files / artifacts ===
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.apk
+*.ap_
+*.dex
+*.aar
+*.keystore
+*.jks
+
+# Protobuf / generated sources (common folders)
+generated/
+**/generated/
+
+# === Logs and databases ===
+*.log
+*.sql
+*.sqlite
+*.db
+
+# === Environment / secret files ===
+*.env
+.env.*
 local.properties
+secret.properties
+*.properties.local
+secrets.properties
+
+# === Test / coverage reports ===
+/coverage/
+*.exec
+jacoco.exec
+test-results/
+TEST-*.xml
+
+# === Package managers / lockfiles (optional) ===
+# Node / Yarn (if using frontend)
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# === CI / tooling artifacts ===
+/buildSrc/.gradle/
+/buildSrc/build/
+/tmp/
+/dist/
+/out/
+
+# === Misc common ===
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# === Personal editors / OS specific extras (optional) ===
+.idea_modules/
+*.iml
+*.ipr
+
+# === Keep this file at repo root ===
