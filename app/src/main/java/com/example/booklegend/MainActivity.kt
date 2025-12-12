@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
             BookLegendTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
-                        name = "Android",
+                        name = "BookLegend",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
