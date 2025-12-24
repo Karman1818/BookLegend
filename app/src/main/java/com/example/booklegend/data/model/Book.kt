@@ -1,7 +1,7 @@
 package com.example.booklegend.data.model
 
 data class Book(
-    val id: String,          // czyste ID"
+    val id: String,          // czyste ID
     val title: String,
     val authorName: String,  // laczymy autorow w jeden ciag
     val coverUrl: String?,   // URL do obrazka
