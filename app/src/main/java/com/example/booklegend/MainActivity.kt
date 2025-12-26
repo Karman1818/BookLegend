@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.booklegend.ui.theme.BookLegendTheme
+import com.example.booklegend.ui.screens.HomeScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,12 +20,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             BookLegendTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "BookLegend",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                // tymczasowy test listy ksiazek
+                HomeScreen(onBookClick = { bookId ->
+                    println("Kliknięto książkę: $bookId")
+                })
             }
         }
     }
