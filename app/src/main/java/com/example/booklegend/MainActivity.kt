@@ -3,6 +3,8 @@ package com.example.booklegend
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -35,7 +37,17 @@ fun BookAppNavigation() {
     ) {
 
         // home screen
-        composable("home") {
+        composable(
+            route = "home",
+            // gdy wracamy do home ze szczegolow to home wjezdza z lewej
+            enterTransition = {
+                slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(500))
+            },
+            // gdy wychodzimy z home do szczegolow to home wyjezdza w lewo
+            exitTransition = {
+                slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(500))
+            }
+        ) {
             HomeScreen(
                 onBookClick = { bookId ->
                     navController.navigate("detail/$bookId")
@@ -51,7 +63,15 @@ fun BookAppNavigation() {
             route = "detail/{bookId}",
             arguments = listOf(
                 navArgument("bookId") { type = NavType.StringType }
-            )
+            ),
+            // wejscie wjazd z prawej
+            enterTransition = {
+                slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(500))
+            },
+            // wyjscie wyjazd w prawo
+            exitTransition = {
+                slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(500))
+            }
         ) { backStackEntry ->
             val bookId = backStackEntry.arguments?.getString("bookId")
 
@@ -66,7 +86,16 @@ fun BookAppNavigation() {
         }
 
         // favorites screen
-        composable("favorites") {
+        composable(
+            route = "favorites",
+            // wejscie: wjazd z dolu
+            enterTransition = {
+                slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up, animationSpec = tween(500))
+            },
+            exitTransition = {
+                slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down, animationSpec = tween(500))
+            }
+        ) {
             FavoritesScreen(
                 onBookClick = { bookId ->
                     navController.navigate("detail/$bookId")
