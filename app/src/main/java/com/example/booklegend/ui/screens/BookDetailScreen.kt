@@ -32,12 +32,13 @@ fun BookDetailScreen(
     viewModel: BookViewModel = viewModel(),
     onBackClick: () -> Unit
 ) {
-    // kiedy wejdziemy na ekran (bookId się zmieni) pobieramy dane
     LaunchedEffect(bookId) {
         viewModel.getBookDetails(bookId)
     }
 
     val state by viewModel.detailUiState.collectAsState()
+    // obserwujemy stan ulubionych z ViewModelu
+    val isFavorite by viewModel.isBookFavorite.collectAsState()
 
     Scaffold(
         topBar = {
@@ -60,19 +61,23 @@ fun BookDetailScreen(
             when (val s = state) {
                 is DetailUiState.Loading -> CircularProgressIndicator()
                 is DetailUiState.Error -> Text(text = s.message, color = MaterialTheme.colorScheme.error)
-                is DetailUiState.Success -> BookDetailContent(details = s.details)
+                is DetailUiState.Success -> BookDetailContent(
+                    details = s.details,
+                    isFavorite = isFavorite,
+                    onToggleFavorite = { viewModel.toggleFavorite(bookId) }
+                )
             }
         }
     }
 }
 
 @Composable
-fun BookDetailContent(details: BookDetails) {
-    // scrollState pozwala przewijac ekran jeśli opis jest dlugi
+fun BookDetailContent(
+    details: BookDetails,
+    isFavorite: Boolean,
+    onToggleFavorite: () -> Unit
+) {
     val scrollState = rememberScrollState()
-
-    // tymczasowy stan dla przycisku ulubionych (tylko wizualny)
-    var isFavorite by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -81,7 +86,7 @@ fun BookDetailContent(details: BookDetails) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        //okladka
+        // okladka
         Card(
             elevation = CardDefaults.cardElevation(8.dp),
             modifier = Modifier.height(300.dp)
@@ -94,14 +99,14 @@ fun BookDetailContent(details: BookDetails) {
                 contentDescription = null,
                 placeholder = painterResource(R.drawable.ic_launcher_foreground),
                 error = painterResource(R.drawable.ic_launcher_foreground),
-                contentScale = ContentScale.Fit, // Fit, żeby widać całą okładkę
+                contentScale = ContentScale.Fit,
                 modifier = Modifier.fillMaxSize()
             )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        //tytul
+        // tytul
         Text(
             text = details.title,
             style = MaterialTheme.typography.headlineSmall,
@@ -111,27 +116,21 @@ fun BookDetailContent(details: BookDetails) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        //info dodatkowe
+        // info
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
-            AssistChip(
-                onClick = {},
-                label = { Text("Stron: ${details.pages}") }
-            )
+            AssistChip(onClick = {}, label = { Text("Stron: ${details.pages}") })
             Spacer(modifier = Modifier.width(16.dp))
-            AssistChip(
-                onClick = {},
-                label = { Text("Rok: ${details.year}") }
-            )
+            AssistChip(onClick = {}, label = { Text("Rok: ${details.year}") })
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        //ulubione
+        // przycisk ulubionych ktory juz w pelni dziala
         Button(
-            onClick = { isFavorite = !isFavorite },
+            onClick = onToggleFavorite,
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (isFavorite) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
             )
@@ -146,7 +145,7 @@ fun BookDetailContent(details: BookDetails) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        //opis
+        // opis
         Text(
             text = "Opis",
             style = MaterialTheme.typography.titleMedium,
