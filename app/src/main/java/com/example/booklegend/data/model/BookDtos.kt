@@ -37,5 +37,8 @@ data class BookDetailsDto(
     val covers: List<Long>?,
 
     @SerializedName("number_of_pages")
-    val numberOfPages: Int?
+    val numberOfPages: Int?,
+
+    @SerializedName("first_publish_date")
+    val firstPublishDate: String?,
 )

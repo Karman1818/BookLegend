@@ -55,7 +55,7 @@ class BookRepository(
             description = descriptionText,
             coverUrl = coverUrl,
             pages = dto.numberOfPages?.toString() ?: "Brak danych",
-            year = "Brak danych"
+            year = dto.firstPublishDate ?: "Brak daty"
         )
     }
 }
