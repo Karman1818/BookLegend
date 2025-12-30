@@ -4,6 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -26,11 +28,10 @@ import com.example.booklegend.ui.viewmodel.HomeUiState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    // viewmodel wrzucamy tutaj dzieki viewmodel() mamy ta sama instancje po obrocie ekranu
     viewModel: BookViewModel = viewModel(),
-    onBookClick: (String) -> Unit // callback do nawigacji
+    onBookClick: (String) -> Unit,
+    onFavoritesClick: () -> Unit,
 ) {
-    // obserwujemy stan gdy zmieni sie w viewmodelu kod wykona sie ponownie
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
@@ -40,11 +41,20 @@ fun HomeScreen(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                ),
+                // przycisk ulubione (serduszko) na gorze
+                actions = {
+                    IconButton(onClick = onFavoritesClick) {
+                        Icon(
+                            imageVector = Icons.Default.Favorite,
+                            contentDescription = "Lista ulubionych",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
             )
         }
     ) { innerPadding ->
-        // glowny kontener z paddingiem scaffolda, zeby nie zaslanial topbara
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -83,7 +93,7 @@ fun BookItem(book: Book, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }, // reakcja klikniecia
+            .clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
@@ -92,15 +102,14 @@ fun BookItem(book: Book, onClick: () -> Unit) {
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // okladka
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(book.coverUrl)
                     .crossfade(true)
                     .build(),
                 contentDescription = "Okładka książki ${book.title}",
-                placeholder = painterResource(R.drawable.ic_launcher_foreground), // placeholder
-                error = painterResource(R.drawable.ic_launcher_foreground), // jesli blad ladowania
+                placeholder = painterResource(R.drawable.ic_launcher_foreground),
+                error = painterResource(R.drawable.ic_launcher_foreground),
                 modifier = Modifier
                     .size(80.dp),
                 contentScale = ContentScale.Crop
@@ -108,7 +117,6 @@ fun BookItem(book: Book, onClick: () -> Unit) {
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // tytul i autor
             Column {
                 Text(
                     text = book.title,
@@ -137,7 +145,7 @@ fun ErrorView(message: String, onRetry: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.padding(16.dp)
     ) {
-        Text(text = "Ups! Coś poszło nie tak", style = MaterialTheme.typography.titleLarge)
+        Text(text = "Ups! Coś poszło nie tak.", style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = message, color = MaterialTheme.colorScheme.error)
         Spacer(modifier = Modifier.height(16.dp))

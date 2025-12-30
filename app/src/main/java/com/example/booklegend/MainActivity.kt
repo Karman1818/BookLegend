@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.booklegend.ui.screens.BookDetailScreen
+import com.example.booklegend.ui.screens.FavoritesScreen
 import com.example.booklegend.ui.screens.HomeScreen
 import com.example.booklegend.ui.theme.BookLegendTheme
 
@@ -26,46 +27,54 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun BookAppNavigation() {
-    //tworzymy kontroler nawigacji
     val navController = rememberNavController()
 
-    //definiujemy kontener na ekrany
     NavHost(
         navController = navController,
         startDestination = "home"
     ) {
 
-        //lista
+        // home screen
         composable("home") {
             HomeScreen(
                 onBookClick = { bookId ->
-                    //nawigacja do szczegolow z przekazaniem parametru
                     navController.navigate("detail/$bookId")
+                },
+                onFavoritesClick = {
+                    navController.navigate("favorites")
                 }
             )
         }
 
-        //szczegoly
-
-        //definiujemy parametr bookId w sciezce
+        // detail screen
         composable(
             route = "detail/{bookId}",
             arguments = listOf(
                 navArgument("bookId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            //wyciagamy bookId z argumentow
             val bookId = backStackEntry.arguments?.getString("bookId")
 
             if (bookId != null) {
                 BookDetailScreen(
                     bookId = bookId,
                     onBackClick = {
-                        //powrot do poprzedniego ekranu
                         navController.popBackStack()
                     }
                 )
             }
+        }
+
+        // favorites screen
+        composable("favorites") {
+            FavoritesScreen(
+                onBookClick = { bookId ->
+                    navController.navigate("detail/$bookId")
+                },
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
