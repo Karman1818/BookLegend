@@ -12,7 +12,8 @@ interface BookApi {
     // Endpoint: subjects/fiction.json?limit=20
     @GET("subjects/fiction.json")
     suspend fun getFictionBooks(
-        @Query("limit") limit: Int = 20
+        @Query("limit") limit: Int = 20,
+        @Query("offset") offset: Int = 0
     ): SubjectResponse
 
     // Pobieramy szczegoly konkretnej ksiazki

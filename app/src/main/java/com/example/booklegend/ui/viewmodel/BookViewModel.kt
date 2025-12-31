@@ -3,23 +3,22 @@ package com.example.booklegend.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.booklegend.data.local.FavoritesManager
+import com.example.booklegend.data.local.FavoritesDataStore
 import com.example.booklegend.data.model.Book
 import com.example.booklegend.data.model.BookDetails
 import com.example.booklegend.data.repository.BookRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.io.IOException
 
 // stany
 
 sealed interface HomeUiState {
     data object Loading : HomeUiState
-    data class Success(val books: List<Book>) : HomeUiState
+    data class Success(val books: List<Book>, val isRefreshing: Boolean = false) : HomeUiState
     data class Error(val message: String) : HomeUiState
 }
 
@@ -36,10 +35,19 @@ sealed interface FavoritesUiState {
     data class Error(val message: String) : FavoritesUiState
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class BookViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = BookRepository()
-    private val favoritesManager = FavoritesManager(application.applicationContext)
+    private val favoritesDataStore = FavoritesDataStore(application.applicationContext)
+
+    // paginacja
+    private var currentOffset = 0
+    private var currentBooks = mutableListOf<Book>()
+    private var isLastPage = false
+    private var isLoadingMore = false
+
+    // stany ui
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -47,96 +55,137 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     private val _detailUiState = MutableStateFlow<DetailUiState>(DetailUiState.Loading)
     val detailUiState: StateFlow<DetailUiState> = _detailUiState.asStateFlow()
 
-    private val _isBookFavorite = MutableStateFlow(false)
-    val isBookFavorite: StateFlow<Boolean> = _isBookFavorite.asStateFlow()
+    // strumien ID ulubionych
+    val favoriteIds: StateFlow<Set<String>> = favoritesDataStore.favoritesFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
 
-    private val _favoritesUiState = MutableStateFlow<FavoritesUiState>(FavoritesUiState.Loading)
-    val favoritesUiState: StateFlow<FavoritesUiState> = _favoritesUiState.asStateFlow()
+    // strumien UI ulubionych
+    val favoritesUiState: StateFlow<FavoritesUiState> = favoritesDataStore.favoritesFlow
+        .transformLatest { ids ->
+            emit(FavoritesUiState.Loading)
+
+            if (ids.isEmpty()) {
+                emit(FavoritesUiState.Empty)
+            } else {
+                try {
+                    val books = coroutineScope {
+                        // pobieramy dane dla kazdego ID rownolegle
+                        val deferredBooks = ids.map { id ->
+                            async {
+                                try {
+                                    val details = repository.getBookDetails(id)
+                                    // mapujemy szczegoly na obiekt listy
+                                    Book(
+                                        id = id,
+                                        title = details.title,
+                                        authorName = details.authorName ?: "Nieznany",
+                                        coverUrl = details.coverUrl,
+                                        year = details.year
+                                    )
+                                } catch (e: Exception) {
+                                    null
+                                }
+                            }
+                        }
+                        deferredBooks.awaitAll().filterNotNull()
+                    }
+
+                    if (books.isEmpty()) {
+                        emit(FavoritesUiState.Empty)
+                    } else {
+                        emit(FavoritesUiState.Success(books))
+                    }
+                } catch (e: Exception) {
+                    emit(FavoritesUiState.Error("Błąd pobierania: ${e.localizedMessage}"))
+                }
+            }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = FavoritesUiState.Loading
+        )
 
     init {
-        getBooks()
+        loadFirstPage()
     }
 
-    //funkcje
+    // funkcje
 
-    fun getBooks() {
+    fun loadFirstPage() {
         viewModelScope.launch {
             _uiState.value = HomeUiState.Loading
+            currentOffset = 0
+            currentBooks.clear()
+            isLastPage = false
+
             try {
-                val books = repository.getBooks()
-                if (books.isEmpty()) _uiState.value = HomeUiState.Error("Lista książek jest pusta.")
-                else _uiState.value = HomeUiState.Success(books)
+                val books = repository.getBooks(offset = 0)
+                currentBooks.addAll(books)
+                _uiState.value = HomeUiState.Success(currentBooks.toList())
             } catch (e: Exception) {
-                _uiState.value = HomeUiState.Error("Błąd: ${e.localizedMessage}")
+                _uiState.value = HomeUiState.Error(e.localizedMessage ?: "Błąd")
+            }
+        }
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            val oldList = (uiState.value as? HomeUiState.Success)?.books ?: emptyList()
+            _uiState.value = HomeUiState.Success(oldList, isRefreshing = true)
+            currentOffset = 0
+            isLastPage = false
+
+            try {
+                val books = repository.getBooks(offset = 0)
+                currentBooks.clear()
+                currentBooks.addAll(books)
+                _uiState.value = HomeUiState.Success(currentBooks.toList(), isRefreshing = false)
+            } catch (e: Exception) {
+                _uiState.value = HomeUiState.Success(currentBooks.toList(), isRefreshing = false)
+            }
+        }
+    }
+
+    fun loadNextPage() {
+        if (isLoadingMore || isLastPage) return
+        if (_uiState.value !is HomeUiState.Success) return
+
+        viewModelScope.launch {
+            isLoadingMore = true
+            currentOffset += 20
+
+            try {
+                val newBooks = repository.getBooks(offset = currentOffset)
+                if (newBooks.isEmpty()) {
+                    isLastPage = true
+                } else {
+                    currentBooks.addAll(newBooks)
+                    _uiState.value = HomeUiState.Success(currentBooks.toList())
+                }
+            } catch (e: Exception) {
+                currentOffset -= 20
+            } finally {
+                isLoadingMore = false
             }
         }
     }
 
     fun getBookDetails(bookId: String) {
-        checkIfFavorite(bookId)
         viewModelScope.launch {
             _detailUiState.value = DetailUiState.Loading
             try {
                 val details = repository.getBookDetails(bookId)
                 _detailUiState.value = DetailUiState.Success(details)
             } catch (e: Exception) {
-                _detailUiState.value = DetailUiState.Error("Nie udało się pobrać szczegółów.")
+                _detailUiState.value = DetailUiState.Error("Błąd")
             }
         }
-    }
-
-    fun getFavoriteBooks() {
-        viewModelScope.launch {
-            _favoritesUiState.value = FavoritesUiState.Loading
-            val favoriteIds = favoritesManager.getFavorites()
-
-            if (favoriteIds.isEmpty()) {
-                _favoritesUiState.value = FavoritesUiState.Empty
-                return@launch
-            }
-
-            try {
-                val deferredBooks = favoriteIds.map { id ->
-                    async {
-                        try {
-                            val details = repository.getBookDetails(id)
-                            Book(
-                                id = id,
-                                title = details.title,
-                                authorName = details.authorName ?: "Autor nieznany",
-                                coverUrl = details.coverUrl,
-                                year = details.year
-                            )
-                        } catch (e: Exception) {
-                            null
-                        }
-                    }
-                }
-
-                val books = deferredBooks.awaitAll().filterNotNull()
-
-                if (books.isEmpty()) {
-                    _favoritesUiState.value = FavoritesUiState.Error("Nie udało się pobrać danych ulubionych.")
-                } else {
-                    _favoritesUiState.value = FavoritesUiState.Success(books)
-                }
-            } catch (e: Exception) {
-                _favoritesUiState.value = FavoritesUiState.Error("Błąd sieci: ${e.localizedMessage}")
-            }
-        }
-    }
-
-    private fun checkIfFavorite(bookId: String) {
-        _isBookFavorite.value = favoritesManager.isFavorite(bookId)
     }
 
     fun toggleFavorite(bookId: String) {
-        if (favoritesManager.isFavorite(bookId)) {
-            favoritesManager.removeFavorite(bookId)
-            _isBookFavorite.value = false
-        } else {
-            favoritesManager.addFavorite(bookId)
-            _isBookFavorite.value = true
+        viewModelScope.launch {
+            favoritesDataStore.toggleFavorite(bookId)
         }
     }
 }

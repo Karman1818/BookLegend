@@ -11,8 +11,8 @@ class BookRepository(
 ) {
 
     // funkcja pobierajaca i mapujaca liste ksiazek
-    suspend fun getBooks(): List<Book> {
-        val response = api.getFictionBooks()
+    suspend fun getBooks(offset: Int): List<Book> {
+        val response = api.getFictionBooks(limit = 20, offset = offset)
 
         // Mapowanie: DTO do Book
         return response.works.map { workDto ->

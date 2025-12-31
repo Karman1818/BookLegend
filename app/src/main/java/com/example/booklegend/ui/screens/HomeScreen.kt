@@ -4,13 +4,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -68,10 +69,23 @@ fun HomeScreen(
                     CircularProgressIndicator()
                 }
                 is HomeUiState.Error -> {
-                    ErrorView(message = state.message, onRetry = { viewModel.getBooks() })
+                    ErrorView(message = state.message, onRetry = { viewModel.loadFirstPage() })
                 }
                 is HomeUiState.Success -> {
-                    BookList(books = state.books, onBookClick = onBookClick)
+                    val pullRefreshState = rememberPullToRefreshState()
+
+                    PullToRefreshBox(
+                        isRefreshing = state.isRefreshing,
+                        onRefresh = { viewModel.refresh() },
+                        state = pullRefreshState,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        BookList(
+                            books = state.books,
+                            onBookClick = onBookClick,
+                            onLoadMore = { viewModel.loadNextPage() }
+                        )
+                    }
                 }
             }
         }
@@ -79,13 +93,45 @@ fun HomeScreen(
 }
 
 @Composable
-fun BookList(books: List<Book>, onBookClick: (String) -> Unit) {
+fun BookList(
+    books: List<Book>,
+    onBookClick: (String) -> Unit,
+    onLoadMore: () -> Unit
+) {
+    val listState = rememberLazyListState()
+
+    val reachedBottom: Boolean by remember {
+        derivedStateOf {
+            val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()
+            lastVisibleItem?.index != 0 && lastVisibleItem?.index == listState.layoutInfo.totalItemsCount - 1
+        }
+    }
+
+    LaunchedEffect(reachedBottom) {
+        if (reachedBottom) onLoadMore()
+    }
+
     LazyColumn(
+        state = listState,
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp) // Zwiększyłem odstępy dla lepszego wyglądu
+        verticalArrangement = Arrangement.spacedBy(12.dp), // Zwiększyłem odstępy dla lepszego wyglądu
+        modifier = Modifier.fillMaxSize()
     ) {
         items(books) { book ->
             BookItem(book = book, onClick = { onBookClick(book.id) })
+        }
+
+        item {
+            if (books.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                }
+            }
         }
     }
 }

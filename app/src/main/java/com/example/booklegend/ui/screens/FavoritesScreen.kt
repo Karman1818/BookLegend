@@ -7,7 +7,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -24,11 +23,6 @@ fun FavoritesScreen(
     onBookClick: (String) -> Unit,
     onBackClick: () -> Unit
 ) {
-    // odswiez liste przy kazdym wejsciu na ten ekran
-    LaunchedEffect(Unit) {
-        viewModel.getFavoriteBooks()
-    }
-
     val state by viewModel.favoritesUiState.collectAsState()
 
     Scaffold(

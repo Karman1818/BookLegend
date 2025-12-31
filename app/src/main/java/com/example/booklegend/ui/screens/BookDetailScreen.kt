@@ -39,7 +39,8 @@ fun BookDetailScreen(
     }
 
     val state by viewModel.detailUiState.collectAsState()
-    val isFavorite by viewModel.isBookFavorite.collectAsState()
+    val favoriteIds by viewModel.favoriteIds.collectAsState()
+    val isFavorite = favoriteIds.contains(bookId)
 
     Box(modifier = Modifier.fillMaxSize()) {
         when (val s = state) {
