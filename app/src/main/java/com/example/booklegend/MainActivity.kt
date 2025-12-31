@@ -6,6 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -15,20 +18,24 @@ import com.example.booklegend.ui.screens.BookDetailScreen
 import com.example.booklegend.ui.screens.FavoritesScreen
 import com.example.booklegend.ui.screens.HomeScreen
 import com.example.booklegend.ui.theme.BookLegendTheme
+import com.example.booklegend.ui.viewmodel.BookViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            BookLegendTheme {
-                BookAppNavigation()
+            val viewModel: BookViewModel = viewModel()
+            val isDarkMode by viewModel.isDarkMode.collectAsState()
+
+            BookLegendTheme(darkTheme = isDarkMode) {
+                BookAppNavigation(viewModel = viewModel)
             }
         }
     }
 }
 
 @Composable
-fun BookAppNavigation() {
+fun BookAppNavigation(viewModel: BookViewModel) {
     val navController = rememberNavController()
 
     NavHost(
@@ -39,16 +46,15 @@ fun BookAppNavigation() {
         // home screen
         composable(
             route = "home",
-            // gdy wracamy do home ze szczegolow to home wjezdza z lewej
             enterTransition = {
                 slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(500))
             },
-            // gdy wychodzimy z home do szczegolow to home wyjezdza w lewo
             exitTransition = {
                 slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(500))
             }
         ) {
             HomeScreen(
+                viewModel = viewModel, // Przekazujemy ten sam viewModel
                 onBookClick = { bookId ->
                     navController.navigate("detail/$bookId")
                 },
@@ -64,11 +70,9 @@ fun BookAppNavigation() {
             arguments = listOf(
                 navArgument("bookId") { type = NavType.StringType }
             ),
-            // wejscie wjazd z prawej
             enterTransition = {
                 slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(500))
             },
-            // wyjscie wyjazd w prawo
             exitTransition = {
                 slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(500))
             }
@@ -85,10 +89,9 @@ fun BookAppNavigation() {
             }
         }
 
-        // favorites screen
+        // Favorites screen
         composable(
             route = "favorites",
-            // wejscie: wjazd z dolu
             enterTransition = {
                 slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up, animationSpec = tween(500))
             },

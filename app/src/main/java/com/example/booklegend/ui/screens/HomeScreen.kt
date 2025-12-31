@@ -1,5 +1,6 @@
 package com.example.booklegend.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -7,7 +8,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -37,25 +42,42 @@ fun HomeScreen(
     onFavoritesClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val isDarkMode by viewModel.isDarkMode.collectAsState()
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Book Explorer") },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                ),
-                actions = {
-                    IconButton(onClick = onFavoritesClick) {
-                        Icon(
-                            imageVector = Icons.Default.Favorite,
-                            contentDescription = "Lista ulubionych",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+            Column {
+                CenterAlignedTopAppBar(
+                    title = { Text("Book Explorer") },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
+                    navigationIcon = {
+                        IconButton(onClick = { viewModel.toggleDarkMode() }) {
+                            Icon(
+                                imageVector = if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                contentDescription = "Zmień motyw",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = onFavoritesClick) {
+                            Icon(
+                                imageVector = Icons.Default.Favorite,
+                                contentDescription = "Lista ulubionych",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
                     }
-                }
-            )
+                )
+                SearchBar(
+                    query = searchQuery,
+                    onQueryChange = { viewModel.onSearchQueryChanged(it) }
+                )
+            }
         }
     ) { innerPadding ->
         Box(
@@ -93,6 +115,34 @@ fun HomeScreen(
 }
 
 @Composable
+fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .background(MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(24.dp)),
+        placeholder = { Text("Szukaj książki...") },
+        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(Icons.Default.Close, contentDescription = "Wyczyść")
+                }
+            }
+        },
+        singleLine = true,
+        shape = RoundedCornerShape(24.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            disabledContainerColor = MaterialTheme.colorScheme.surface
+        )
+    )
+}
+
+@Composable
 fun BookList(
     books: List<Book>,
     onBookClick: (String) -> Unit,
@@ -114,7 +164,7 @@ fun BookList(
     LazyColumn(
         state = listState,
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp), // Zwiększyłem odstępy dla lepszego wyglądu
+        verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxSize()
     ) {
         items(books) { book ->
@@ -154,13 +204,12 @@ fun BookItem(book: Book, onClick: () -> Unit) {
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // okladka z zaokraglonymi rogami
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(book.coverUrl)
                     .crossfade(true)
                     .build(),
-                contentDescription = "Okładka książki ${book.title}",
+                contentDescription = null,
                 placeholder = painterResource(R.drawable.ic_launcher_foreground),
                 error = painterResource(R.drawable.ic_launcher_foreground),
                 modifier = Modifier
@@ -189,7 +238,6 @@ fun BookItem(book: Book, onClick: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // rok
                 Surface(
                     color = MaterialTheme.colorScheme.surfaceVariant,
                     shape = RoundedCornerShape(4.dp)

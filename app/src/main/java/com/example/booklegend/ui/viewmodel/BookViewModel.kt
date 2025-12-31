@@ -8,9 +8,11 @@ import com.example.booklegend.data.model.Book
 import com.example.booklegend.data.model.BookDetails
 import com.example.booklegend.data.repository.BookRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -47,6 +49,10 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     private var isLastPage = false
     private var isLoadingMore = false
 
+    // wyszkukiwanie
+    private var currentQuery = ""
+    private var searchJob: Job? = null
+
     // stany ui
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
@@ -55,26 +61,30 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     private val _detailUiState = MutableStateFlow<DetailUiState>(DetailUiState.Loading)
     val detailUiState: StateFlow<DetailUiState> = _detailUiState.asStateFlow()
 
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
     // strumien ID ulubionych
     val favoriteIds: StateFlow<Set<String>> = favoritesDataStore.favoritesFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
+
+    // strumien trybu ciemnego
+    val isDarkMode: StateFlow<Boolean> = favoritesDataStore.darkModeFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     // strumien UI ulubionych
     val favoritesUiState: StateFlow<FavoritesUiState> = favoritesDataStore.favoritesFlow
         .transformLatest { ids ->
             emit(FavoritesUiState.Loading)
-
             if (ids.isEmpty()) {
                 emit(FavoritesUiState.Empty)
             } else {
                 try {
                     val books = coroutineScope {
-                        // pobieramy dane dla kazdego ID rownolegle
                         val deferredBooks = ids.map { id ->
                             async {
                                 try {
                                     val details = repository.getBookDetails(id)
-                                    // mapujemy szczegoly na obiekt listy
                                     Book(
                                         id = id,
                                         title = details.title,
@@ -82,35 +92,35 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
                                         coverUrl = details.coverUrl,
                                         year = details.year
                                     )
-                                } catch (e: Exception) {
-                                    null
-                                }
+                                } catch (e: Exception) { null }
                             }
                         }
                         deferredBooks.awaitAll().filterNotNull()
                     }
-
-                    if (books.isEmpty()) {
-                        emit(FavoritesUiState.Empty)
-                    } else {
-                        emit(FavoritesUiState.Success(books))
-                    }
+                    if (books.isEmpty()) emit(FavoritesUiState.Empty)
+                    else emit(FavoritesUiState.Success(books))
                 } catch (e: Exception) {
-                    emit(FavoritesUiState.Error("Błąd pobierania: ${e.localizedMessage}"))
+                    emit(FavoritesUiState.Error("Błąd: ${e.localizedMessage}"))
                 }
             }
         }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = FavoritesUiState.Loading
-        )
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FavoritesUiState.Loading)
 
     init {
         loadFirstPage()
     }
 
     // funkcje
+
+    fun onSearchQueryChanged(newQuery: String) {
+        _searchQuery.value = newQuery
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            delay(500)
+            currentQuery = newQuery
+            loadFirstPage()
+        }
+    }
 
     fun loadFirstPage() {
         viewModelScope.launch {
@@ -120,7 +130,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
             isLastPage = false
 
             try {
-                val books = repository.getBooks(offset = 0)
+                val books = repository.getBooks(offset = 0, query = currentQuery)
                 currentBooks.addAll(books)
                 _uiState.value = HomeUiState.Success(currentBooks.toList())
             } catch (e: Exception) {
@@ -137,7 +147,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
             isLastPage = false
 
             try {
-                val books = repository.getBooks(offset = 0)
+                val books = repository.getBooks(offset = 0, query = currentQuery)
                 currentBooks.clear()
                 currentBooks.addAll(books)
                 _uiState.value = HomeUiState.Success(currentBooks.toList(), isRefreshing = false)
@@ -156,7 +166,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
             currentOffset += 20
 
             try {
-                val newBooks = repository.getBooks(offset = currentOffset)
+                val newBooks = repository.getBooks(offset = currentOffset, query = currentQuery)
                 if (newBooks.isEmpty()) {
                     isLastPage = true
                 } else {
@@ -186,6 +196,13 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     fun toggleFavorite(bookId: String) {
         viewModelScope.launch {
             favoritesDataStore.toggleFavorite(bookId)
+        }
+    }
+
+    fun toggleDarkMode() {
+        viewModelScope.launch {
+            val current = isDarkMode.value
+            favoritesDataStore.setDarkMode(!current)
         }
     }
 }
