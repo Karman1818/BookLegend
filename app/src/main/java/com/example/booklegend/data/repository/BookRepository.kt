@@ -9,21 +9,40 @@ class BookRepository(
     private val api: BookApi = RetrofitClient.api
 ) {
 
+    // funkcja obslugująca lite domyslna i wyszukiwarke
     suspend fun getBooks(offset: Int = 0, query: String = ""): List<Book> {
+        return if (query.isEmpty()) {
+            // brak wpisanego tekstu to Pobierz kategorię fiction
+            val response = api.getFictionBooks(limit = 20, offset = offset)
 
-        val response = api.getFictionBooks(limit = 20, offset = offset)
+            response.works.map { workDto ->
+                Book(
+                    id = workDto.key.replace("/works/", ""),
+                    title = workDto.title,
+                    authorName = workDto.authors?.firstOrNull()?.name ?: "Nieznany autor",
+                    coverUrl = workDto.coverId?.let { "https://covers.openlibrary.org/b/id/$it-M.jpg" },
+                    year = workDto.firstPublishYear?.toString() ?: "Brak daty"
+                )
+            }
+        } else {
+            // uzytkownik wpisal tekst -> uzyj API wyszukiwania
+            val page = (offset / 20) + 1
 
-        return response.works.map { workDto ->
-            Book(
-                id = workDto.key.replace("/works/", ""),
-                title = workDto.title,
-                authorName = workDto.authors?.firstOrNull()?.name ?: "Nieznany autor",
-                coverUrl = workDto.coverId?.let { "https://covers.openlibrary.org/b/id/$it-M.jpg" },
-                year = workDto.firstPublishYear?.toString() ?: "Brak daty"
-            )
+            val response = api.searchBooks(query = query, page = page, limit = 20)
+
+            response.docs.map { doc ->
+                Book(
+                    id = doc.key.replace("/works/", ""),
+                    title = doc.title,
+                    authorName = doc.authorNames?.firstOrNull() ?: "Nieznany autor",
+                    coverUrl = doc.coverId?.let { "https://covers.openlibrary.org/b/id/$it-M.jpg" },
+                    year = doc.firstPublishYear?.toString() ?: "Brak daty"
+                )
+            }
         }
     }
 
+    // szczegoly
     suspend fun getBookDetails(bookId: String): BookDetails {
         val dto = api.getBookDetails(bookId)
 
