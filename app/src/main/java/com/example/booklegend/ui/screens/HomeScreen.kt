@@ -49,7 +49,7 @@ fun HomeScreen(
         topBar = {
             Column {
                 CenterAlignedTopAppBar(
-                    title = { Text("Book Explorer") },
+                    title = { Text("Book Legend") },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
                         titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
