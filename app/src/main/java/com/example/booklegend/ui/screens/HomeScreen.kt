@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -24,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -33,6 +35,7 @@ import com.example.booklegend.R
 import com.example.booklegend.data.model.Book
 import com.example.booklegend.ui.viewmodel.BookViewModel
 import com.example.booklegend.ui.viewmodel.HomeUiState
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -102,11 +105,15 @@ fun HomeScreen(
                         state = pullRefreshState,
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        BookList(
-                            books = state.books,
-                            onBookClick = onBookClick,
-                            onLoadMore = { viewModel.loadNextPage() }
-                        )
+                        if (state.books.isEmpty()) {
+                            EmptyStateView(query = searchQuery)
+                        } else {
+                            BookList(
+                                books = state.books,
+                                onBookClick = onBookClick,
+                                onLoadMore = { viewModel.loadNextPage() }
+                            )
+                        }
                     }
                 }
             }
@@ -250,6 +257,49 @@ fun BookItem(book: Book, onClick: () -> Unit) {
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun EmptyStateView(query: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.SearchOff,
+            contentDescription = null,
+            modifier = Modifier.size(80.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Nie znaleziono wyników",
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (query.isNotEmpty()) {
+            Text(
+                text = "Nie udało się znaleźć książek dla frazy \"$query\". Spróbuj wpisać inny tytuł.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        } else {
+            Text(
+                text = "Lista książek jest pusta.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
