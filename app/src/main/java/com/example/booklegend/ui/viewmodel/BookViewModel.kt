@@ -50,9 +50,10 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     private var isLastPage = false
     private var isLoadingMore = false
 
-    // wyszukiwanie
+    // wyszukiwanie i ladowanie
     private var currentQuery = ""
     private var searchJob: Job? = null
+    private var loadJob: Job? = null
 
     // stany ui
 
@@ -132,14 +133,15 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun loadFirstPage() {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             _uiState.value = HomeUiState.Loading
             currentOffset = 0
-            currentBooks.clear()
             isLastPage = false
 
             try {
                 val books = repository.getBooks(offset = 0, query = currentQuery)
+                currentBooks.clear()
                 currentBooks.addAll(books)
                 _uiState.value = HomeUiState.Success(currentBooks.toList())
             } catch (e: Exception) {
@@ -150,7 +152,8 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun refresh() {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             val oldList = (uiState.value as? HomeUiState.Success)?.books ?: emptyList()
             _uiState.value = HomeUiState.Success(oldList, isRefreshing = true)
             currentOffset = 0
