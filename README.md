@@ -12,11 +12,13 @@ A modern Android mobile application for browsing, searching, and collecting your
 ## 📱 Screenshots
 
 <p align="center">
-  <img src="screenshots/booklegend1.png" width="23%" alt="Home Screen" />
-  <img src="screenshots/booklegend2.png" width="23%" alt="Search & Dark Mode" />
-  <img src="screenshots/booklegend3.png" width="23%" alt="Book Details" />
-  <img src="screenshots/booklegend4.png" width="23%" alt="Favorites" />
+  <img src="screenshots/showcase_banner.png" width="100%" alt="BookLegend Showcase" />
 </p>
+
+| 🌙 Catalog (Dark) | 📖 Book Details | ❤️ Favorites | ☀️ Catalog (Light) |
+| :---: | :---: | :---: | :---: |
+| <img src="screenshots/booklegend1.png" width="220" alt="Catalog Dark"/> | <img src="screenshots/booklegend2.png" width="220" alt="Book Details"/> | <img src="screenshots/booklegend3.png" width="220" alt="Favorites"/> | <img src="screenshots/booklegend4.png" width="220" alt="Catalog Light"/> |
+| Infinite scrolling, live search & language switcher | Adaptive bottom sheet, full description & metadata | Persistent storage with DataStore | Dynamic Material 3 theme & color scheme |
 
 ---
 
