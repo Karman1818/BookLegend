@@ -44,10 +44,11 @@ sealed interface FavoritesUiState {
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class BookViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val repository = BookRepository()
-    private val favoritesDataStore = FavoritesDataStore(application.applicationContext)
+class BookViewModel(
+    application: Application,
+    private val repository: BookRepository = BookRepository(),
+    private val favoritesDataStore: FavoritesDataStore = FavoritesDataStore(application.applicationContext)
+) : AndroidViewModel(application) {
 
     // paginacja
     private var currentOffset = 0
