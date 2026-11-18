@@ -17,10 +17,10 @@ class BookRepository(
 
             response.works.map { workDto ->
                 Book(
-                    id = workDto.key.replace("/works/", ""),
+                    id = workDto.key.removePrefix("/works/").removePrefix("works/"),
                     title = workDto.title,
                     authorName = workDto.authors?.firstOrNull()?.name,
-                    coverUrl = workDto.coverId?.let { "https://covers.openlibrary.org/b/id/$it-M.jpg" },
+                    coverUrl = workDto.coverId?.takeIf { it > 0 }?.let { "https://covers.openlibrary.org/b/id/$it-M.jpg" },
                     year = workDto.firstPublishYear?.toString()
                 )
             }
@@ -32,10 +32,10 @@ class BookRepository(
 
             response.docs.map { doc ->
                 Book(
-                    id = doc.key.replace("/works/", ""),
+                    id = doc.key.removePrefix("/works/").removePrefix("works/"),
                     title = doc.title,
                     authorName = doc.authorNames?.firstOrNull(),
-                    coverUrl = doc.coverId?.let { "https://covers.openlibrary.org/b/id/$it-M.jpg" },
+                    coverUrl = doc.coverId?.takeIf { it > 0 }?.let { "https://covers.openlibrary.org/b/id/$it-M.jpg" },
                     year = doc.firstPublishYear?.toString()
                 )
             }
@@ -52,7 +52,7 @@ class BookRepository(
             else -> null
         }
 
-        val coverUrl = dto.covers?.firstOrNull()?.let { id ->
+        val coverUrl = dto.covers?.firstOrNull { it > 0 }?.let { id ->
             "https://covers.openlibrary.org/b/id/$id-L.jpg"
         }
 
