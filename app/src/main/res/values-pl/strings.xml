@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">BookLegend</string>
+    <string name="cd_toggle_theme">Zmień motyw</string>
+    <string name="cd_favorites_list">Lista ulubionych</string>
+    <string name="cd_toggle_language">Zmień język</string>
+    <string name="cd_clear_search">Wyczyść</string>
+    <string name="cd_back">Wróć</string>
+    <string name="cd_favorite">Ulubione</string>
+
+    <string name="search_placeholder">Szukaj książki...</string>
+    <string name="empty_state_title">Nie znaleziono wyników</string>
+    <string name="empty_state_query">Nie udało się znaleźć książek dla frazy \"%1$s\". Spróbuj wpisać inny tytuł.</string>
+    <string name="empty_state_no_books">Lista książek jest pusta.</string>
+    <string name="error_title">Ups! Coś poszło nie tak.</string>
+    <string name="try_again">Spróbuj ponownie</string>
+
+    <string name="favorites_title">Ulubione książki</string>
+    <string name="favorites_empty">Brak ulubionych książek.\nDodaj coś z listy głównej!</string>
+
+    <string name="detail_about">O KSIĄŻCE</string>
+    <string name="detail_year">Rok: %1$s</string>
+    <string name="detail_pages">Stron: %1$s</string>
+
+    <string name="unknown_author">Nieznany autor</string>
+    <string name="no_date">Brak daty</string>
+    <string name="no_pages">Brak danych</string>
+    <string name="no_description">Brak opisu</string>
+    <string name="error_generic">Błąd</string>
+    <string name="error_prefix">Błąd: %1$s</string>
+</resources>

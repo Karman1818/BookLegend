@@ -49,7 +49,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     private var isLastPage = false
     private var isLoadingMore = false
 
-    // wyszkukiwanie
+    // wyszukiwanie
     private var currentQuery = ""
     private var searchJob: Job? = null
 
@@ -72,6 +72,10 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     val isDarkMode: StateFlow<Boolean> = favoritesDataStore.darkModeFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    // strumien jezyka aplikacji
+    val currentLanguage: StateFlow<String> = favoritesDataStore.languageFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "pl")
+
     // strumien UI ulubionych
     val favoritesUiState: StateFlow<FavoritesUiState> = favoritesDataStore.favoritesFlow
         .transformLatest { ids ->
@@ -88,7 +92,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
                                     Book(
                                         id = id,
                                         title = details.title,
-                                        authorName = details.authorName ?: "Nieznany",
+                                        authorName = details.authorName,
                                         coverUrl = details.coverUrl,
                                         year = details.year
                                     )
@@ -100,7 +104,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
                     if (books.isEmpty()) emit(FavoritesUiState.Empty)
                     else emit(FavoritesUiState.Success(books))
                 } catch (e: Exception) {
-                    emit(FavoritesUiState.Error("Błąd: ${e.localizedMessage}"))
+                    emit(FavoritesUiState.Error(e.localizedMessage ?: "Error"))
                 }
             }
         }
@@ -134,7 +138,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
                 currentBooks.addAll(books)
                 _uiState.value = HomeUiState.Success(currentBooks.toList())
             } catch (e: Exception) {
-                _uiState.value = HomeUiState.Error(e.localizedMessage ?: "Błąd")
+                _uiState.value = HomeUiState.Error(e.localizedMessage ?: "Error")
             }
         }
     }
@@ -188,7 +192,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
                 val details = repository.getBookDetails(bookId)
                 _detailUiState.value = DetailUiState.Success(details)
             } catch (e: Exception) {
-                _detailUiState.value = DetailUiState.Error("Błąd")
+                _detailUiState.value = DetailUiState.Error(e.localizedMessage ?: "Error")
             }
         }
     }
@@ -203,6 +207,19 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val current = isDarkMode.value
             favoritesDataStore.setDarkMode(!current)
+        }
+    }
+
+    fun setLanguage(language: String) {
+        viewModelScope.launch {
+            favoritesDataStore.setLanguage(language)
+        }
+    }
+
+    fun toggleLanguage() {
+        viewModelScope.launch {
+            val next = if (currentLanguage.value == "pl") "en" else "pl"
+            favoritesDataStore.setLanguage(next)
         }
     }
 }

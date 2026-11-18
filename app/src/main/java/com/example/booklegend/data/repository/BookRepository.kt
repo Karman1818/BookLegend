@@ -9,19 +9,19 @@ class BookRepository(
     private val api: BookApi = RetrofitClient.api
 ) {
 
-    // funkcja obslugująca lite domyslna i wyszukiwarke
+    // funkcja obslugująca liste domyslna i wyszukiwarke
     suspend fun getBooks(offset: Int = 0, query: String = ""): List<Book> {
         return if (query.isEmpty()) {
-            // brak wpisanego tekstu to Pobierz kategorię fiction
+            // brak wpisanego tekstu -> Pobierz kategorię fiction
             val response = api.getFictionBooks(limit = 20, offset = offset)
 
             response.works.map { workDto ->
                 Book(
                     id = workDto.key.replace("/works/", ""),
                     title = workDto.title,
-                    authorName = workDto.authors?.firstOrNull()?.name ?: "Nieznany autor",
+                    authorName = workDto.authors?.firstOrNull()?.name,
                     coverUrl = workDto.coverId?.let { "https://covers.openlibrary.org/b/id/$it-M.jpg" },
-                    year = workDto.firstPublishYear?.toString() ?: "Brak daty"
+                    year = workDto.firstPublishYear?.toString()
                 )
             }
         } else {
@@ -34,9 +34,9 @@ class BookRepository(
                 Book(
                     id = doc.key.replace("/works/", ""),
                     title = doc.title,
-                    authorName = doc.authorNames?.firstOrNull() ?: "Nieznany autor",
+                    authorName = doc.authorNames?.firstOrNull(),
                     coverUrl = doc.coverId?.let { "https://covers.openlibrary.org/b/id/$it-M.jpg" },
-                    year = doc.firstPublishYear?.toString() ?: "Brak daty"
+                    year = doc.firstPublishYear?.toString()
                 )
             }
         }
@@ -48,8 +48,8 @@ class BookRepository(
 
         val descriptionText = when (val desc = dto.description) {
             is String -> desc
-            is Map<*, *> -> desc["value"] as? String ?: "Brak opisu"
-            else -> "Brak opisu"
+            is Map<*, *> -> desc["value"] as? String
+            else -> null
         }
 
         val coverUrl = dto.covers?.firstOrNull()?.let { id ->
@@ -61,8 +61,8 @@ class BookRepository(
             authorName = null,
             description = descriptionText,
             coverUrl = coverUrl,
-            pages = dto.numberOfPages?.toString() ?: "Brak danych",
-            year = dto.firstPublishDate ?: "Brak daty"
+            pages = dto.numberOfPages?.toString(),
+            year = dto.firstPublishDate
         )
     }
 }

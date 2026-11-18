@@ -1,3 +1,30 @@
 <resources>
     <string name="app_name">BookLegend</string>
+    <string name="cd_toggle_theme">Change theme</string>
+    <string name="cd_favorites_list">Favorites list</string>
+    <string name="cd_toggle_language">Change language</string>
+    <string name="cd_clear_search">Clear</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_favorite">Favorite</string>
+
+    <string name="search_placeholder">Search books...</string>
+    <string name="empty_state_title">No results found</string>
+    <string name="empty_state_query">No books found for \"%1$s\". Try searching for another title.</string>
+    <string name="empty_state_no_books">The book list is empty.</string>
+    <string name="error_title">Oops! Something went wrong.</string>
+    <string name="try_again">Try again</string>
+
+    <string name="favorites_title">Favorite books</string>
+    <string name="favorites_empty">No favorite books yet.\nAdd something from the main list!</string>
+
+    <string name="detail_about">ABOUT THE BOOK</string>
+    <string name="detail_year">Year: %1$s</string>
+    <string name="detail_pages">Pages: %1$s</string>
+
+    <string name="unknown_author">Unknown author</string>
+    <string name="no_date">No date</string>
+    <string name="no_pages">No data</string>
+    <string name="no_description">No description</string>
+    <string name="error_generic">Error</string>
+    <string name="error_prefix">Error: %1$s</string>
 </resources>

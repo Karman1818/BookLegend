@@ -9,10 +9,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,7 +37,6 @@ import com.example.booklegend.data.model.Book
 import com.example.booklegend.ui.viewmodel.BookViewModel
 import com.example.booklegend.ui.viewmodel.HomeUiState
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -47,12 +47,14 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val isDarkMode by viewModel.isDarkMode.collectAsState()
+    val currentLanguage by viewModel.currentLanguage.collectAsState()
+    var showLanguageMenu by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             Column {
                 CenterAlignedTopAppBar(
-                    title = { Text("Book Legend") },
+                    title = { Text(stringResource(R.string.app_name)) },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
                         titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -61,16 +63,51 @@ fun HomeScreen(
                         IconButton(onClick = { viewModel.toggleDarkMode() }) {
                             Icon(
                                 imageVector = if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
-                                contentDescription = "Zmień motyw",
+                                contentDescription = stringResource(R.string.cd_toggle_theme),
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
                     },
                     actions = {
+                        // Przełącznik języka (PL / EN)
+                        Box {
+                            TextButton(
+                                onClick = { showLanguageMenu = true },
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = if (currentLanguage == "pl") "🇵🇱 PL" else "🇬🇧 EN",
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showLanguageMenu,
+                                onDismissRequest = { showLanguageMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Polski") },
+                                    onClick = {
+                                        viewModel.setLanguage("pl")
+                                        showLanguageMenu = false
+                                    },
+                                    leadingIcon = { Text("🇵🇱") }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("English") },
+                                    onClick = {
+                                        viewModel.setLanguage("en")
+                                        showLanguageMenu = false
+                                    },
+                                    leadingIcon = { Text("🇬🇧") }
+                                )
+                            }
+                        }
+
                         IconButton(onClick = onFavoritesClick) {
                             Icon(
                                 imageVector = Icons.Default.Favorite,
-                                contentDescription = "Lista ulubionych",
+                                contentDescription = stringResource(R.string.cd_favorites_list),
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
@@ -130,12 +167,15 @@ fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .background(MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(24.dp)),
-        placeholder = { Text("Szukaj książki...") },
+        placeholder = { Text(stringResource(R.string.search_placeholder)) },
         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
         trailingIcon = {
             if (query.isNotEmpty()) {
                 IconButton(onClick = { onQueryChange("") }) {
-                    Icon(Icons.Default.Close, contentDescription = "Wyczyść")
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = stringResource(R.string.cd_clear_search)
+                    )
                 }
             }
         },
@@ -239,7 +279,7 @@ fun BookItem(book: Book, onClick: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = book.authorName,
+                    text = book.authorName ?: stringResource(R.string.unknown_author),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -250,7 +290,7 @@ fun BookItem(book: Book, onClick: () -> Unit) {
                     shape = RoundedCornerShape(4.dp)
                 ) {
                     Text(
-                        text = book.year,
+                        text = book.year ?: stringResource(R.string.no_date),
                         style = MaterialTheme.typography.labelSmall,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -280,7 +320,7 @@ fun EmptyStateView(query: String) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Nie znaleziono wyników",
+            text = stringResource(R.string.empty_state_title),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -289,14 +329,14 @@ fun EmptyStateView(query: String) {
 
         if (query.isNotEmpty()) {
             Text(
-                text = "Nie udało się znaleźć książek dla frazy \"$query\". Spróbuj wpisać inny tytuł.",
+                text = stringResource(R.string.empty_state_query, query),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
         } else {
             Text(
-                text = "Lista książek jest pusta.",
+                text = stringResource(R.string.empty_state_no_books),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -311,12 +351,12 @@ fun ErrorView(message: String, onRetry: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.padding(16.dp)
     ) {
-        Text(text = "Ups! Coś poszło nie tak.", style = MaterialTheme.typography.titleLarge)
+        Text(text = stringResource(R.string.error_title), style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = message, color = MaterialTheme.colorScheme.error)
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = onRetry) {
-            Text("Spróbuj ponownie")
+            Text(stringResource(R.string.try_again))
         }
     }
 }

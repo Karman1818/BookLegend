@@ -11,8 +11,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.booklegend.R
 import com.example.booklegend.ui.viewmodel.BookViewModel
 import com.example.booklegend.ui.viewmodel.FavoritesUiState
 
@@ -28,10 +30,13 @@ fun FavoritesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Ulubione książki") },
+                title = { Text(stringResource(R.string.favorites_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wróć")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.cd_back)
+                        )
                     }
                 }
             )
@@ -47,7 +52,7 @@ fun FavoritesScreen(
                 is FavoritesUiState.Loading -> CircularProgressIndicator()
                 is FavoritesUiState.Empty -> {
                     Text(
-                        text = "Brak ulubionych książek.\nDodaj coś z listy głównej!",
+                        text = stringResource(R.string.favorites_empty),
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.padding(16.dp)
                     )
@@ -62,7 +67,6 @@ fun FavoritesScreen(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         items(s.favoriteBooks) { book ->
-                            // reuzywamy BookItem z HomeScreen
                             BookItem(book = book, onClick = { onBookClick(book.id) })
                         }
                     }

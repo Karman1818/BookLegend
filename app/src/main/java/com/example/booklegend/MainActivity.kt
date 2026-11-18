@@ -1,13 +1,19 @@
 package com.example.booklegend
 
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -19,6 +25,7 @@ import com.example.booklegend.ui.screens.FavoritesScreen
 import com.example.booklegend.ui.screens.HomeScreen
 import com.example.booklegend.ui.theme.BookLegendTheme
 import com.example.booklegend.ui.viewmodel.BookViewModel
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,11 +33,40 @@ class MainActivity : ComponentActivity() {
         setContent {
             val viewModel: BookViewModel = viewModel()
             val isDarkMode by viewModel.isDarkMode.collectAsState()
+            val currentLanguage by viewModel.currentLanguage.collectAsState()
 
-            BookLegendTheme(darkTheme = isDarkMode) {
-                BookAppNavigation(viewModel = viewModel)
+            LocalizedApp(language = currentLanguage) {
+                BookLegendTheme(darkTheme = isDarkMode) {
+                    BookAppNavigation(viewModel = viewModel)
+                }
             }
         }
+    }
+}
+
+@Composable
+fun LocalizedApp(language: String, content: @Composable () -> Unit) {
+    val locale = remember(language) { Locale(language) }
+    val currentConfig = LocalConfiguration.current
+    val configuration = remember(language, currentConfig) {
+        Configuration(currentConfig).apply {
+            setLocale(locale)
+        }
+    }
+    val context = LocalContext.current
+    val localizedContext = remember(language, context) {
+        context.createConfigurationContext(configuration)
+    }
+
+    LaunchedEffect(language) {
+        Locale.setDefault(locale)
+    }
+
+    CompositionLocalProvider(
+        LocalConfiguration provides configuration,
+        LocalContext provides localizedContext
+    ) {
+        content()
     }
 }
 
@@ -54,7 +90,7 @@ fun BookAppNavigation(viewModel: BookViewModel) {
             }
         ) {
             HomeScreen(
-                viewModel = viewModel, // Przekazujemy ten sam viewModel
+                viewModel = viewModel,
                 onBookClick = { bookId ->
                     navController.navigate("detail/$bookId")
                 },

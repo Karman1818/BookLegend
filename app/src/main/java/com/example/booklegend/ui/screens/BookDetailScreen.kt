@@ -17,16 +17,18 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.booklegend.R
 import com.example.booklegend.data.model.BookDetails
 import com.example.booklegend.ui.viewmodel.BookViewModel
 import com.example.booklegend.ui.viewmodel.DetailUiState
-import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun BookDetailScreen(
@@ -76,7 +78,7 @@ fun BookDetailContentModern(
     val scrollState = rememberScrollState()
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // tlo na samym spodzie
+        // Tło na samym spodzie
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -103,13 +105,12 @@ fun BookDetailContentModern(
             )
         }
 
-        // wjezdzajaca karta z trescia
+        // Karta z treścią
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
         ) {
-            // pusty spacer odslaniajacy zdjecie
             Spacer(modifier = Modifier.height(280.dp))
 
             Surface(
@@ -133,24 +134,34 @@ fun BookDetailContentModern(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        InfoChip(text = "Rok: ${details.year}")
-                        InfoChip(text = "Stron: ${details.pages}")
+                        InfoChip(
+                            text = stringResource(
+                                R.string.detail_year,
+                                details.year ?: stringResource(R.string.no_date)
+                            )
+                        )
+                        InfoChip(
+                            text = stringResource(
+                                R.string.detail_pages,
+                                details.pages ?: stringResource(R.string.no_pages)
+                            )
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    Divider(color = MaterialTheme.colorScheme.outlineVariant)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = "O KSIĄŻCE",
+                        text = stringResource(R.string.detail_about),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = details.description,
+                        text = details.description ?: stringResource(R.string.no_description),
                         style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Justify
@@ -161,7 +172,7 @@ fun BookDetailContentModern(
             }
         }
 
-        // przycisk wstecz
+        // Przycisk wstecz
         IconButton(
             onClick = onBackClick,
             modifier = Modifier
@@ -171,12 +182,12 @@ fun BookDetailContentModern(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Wróć",
+                contentDescription = stringResource(R.string.cd_back),
                 tint = Color.White
             )
         }
 
-        // przycisk ulubione
+        // Przycisk ulubione
         FloatingActionButton(
             onClick = onToggleFavorite,
             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -187,7 +198,7 @@ fun BookDetailContentModern(
         ) {
             Icon(
                 imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                contentDescription = "Ulubione",
+                contentDescription = stringResource(R.string.cd_favorite),
                 tint = if (isFavorite) Color.Red else MaterialTheme.colorScheme.onPrimaryContainer
             )
         }

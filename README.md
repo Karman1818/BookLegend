@@ -16,6 +16,7 @@ A modern Android mobile application for browsing, searching, and collecting your
 * **🔍 Search:** Search for books by title or author (Live Search).
 * **❤️ Favorites:** Add and remove books from your favorites list. Data is saved locally (persistent storage).
 * **🌙 Dark Mode:** Full dark theme support with a toggle in the app bar. The preference state is preserved across app restarts.
+* **🌐 Multi-Language Support (i18n):** Easily switch between Polish and English directly from the app bar. User preference is saved across app restarts.
 * **📱 Book Details:** A detailed view featuring a large cover image, description, publication year, and page count.
 
 ---
