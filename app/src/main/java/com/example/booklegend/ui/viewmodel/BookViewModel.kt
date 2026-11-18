@@ -8,6 +8,7 @@ import com.example.booklegend.data.model.Book
 import com.example.booklegend.data.model.BookDetails
 import com.example.booklegend.data.repository.BookRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -96,7 +97,10 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
                                         coverUrl = details.coverUrl,
                                         year = details.year
                                     )
-                                } catch (e: Exception) { null }
+                                } catch (e: Exception) {
+                                    if (e is CancellationException) throw e
+                                    null
+                                }
                             }
                         }
                         deferredBooks.awaitAll().filterNotNull()
@@ -104,6 +108,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
                     if (books.isEmpty()) emit(FavoritesUiState.Empty)
                     else emit(FavoritesUiState.Success(books))
                 } catch (e: Exception) {
+                    if (e is CancellationException) throw e
                     emit(FavoritesUiState.Error(e.localizedMessage ?: "Error"))
                 }
             }
@@ -138,6 +143,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
                 currentBooks.addAll(books)
                 _uiState.value = HomeUiState.Success(currentBooks.toList())
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 _uiState.value = HomeUiState.Error(e.localizedMessage ?: "Error")
             }
         }
@@ -156,6 +162,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
                 currentBooks.addAll(books)
                 _uiState.value = HomeUiState.Success(currentBooks.toList(), isRefreshing = false)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 _uiState.value = HomeUiState.Success(currentBooks.toList(), isRefreshing = false)
             }
         }
@@ -178,6 +185,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
                     _uiState.value = HomeUiState.Success(currentBooks.toList())
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 currentOffset -= 20
             } finally {
                 isLoadingMore = false
@@ -192,6 +200,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
                 val details = repository.getBookDetails(bookId)
                 _detailUiState.value = DetailUiState.Success(details)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 _detailUiState.value = DetailUiState.Error(e.localizedMessage ?: "Error")
             }
         }
