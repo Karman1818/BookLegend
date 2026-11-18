@@ -21,7 +21,12 @@ import kotlinx.coroutines.launch
 
 sealed interface HomeUiState {
     data object Loading : HomeUiState
-    data class Success(val books: List<Book>, val isRefreshing: Boolean = false) : HomeUiState
+    data class Success(
+        val books: List<Book>,
+        val isRefreshing: Boolean = false,
+        val isLoadingMore: Boolean = false,
+        val isLastPage: Boolean = false
+    ) : HomeUiState
     data class Error(val message: String) : HomeUiState
 }
 
@@ -173,23 +178,30 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
 
     fun loadNextPage() {
         if (isLoadingMore || isLastPage) return
-        if (_uiState.value !is HomeUiState.Success) return
+        val currentSuccess = _uiState.value as? HomeUiState.Success ?: return
 
         viewModelScope.launch {
             isLoadingMore = true
+            _uiState.value = currentSuccess.copy(isLoadingMore = true)
             currentOffset += 20
 
             try {
                 val newBooks = repository.getBooks(offset = currentOffset, query = currentQuery)
                 if (newBooks.isEmpty()) {
                     isLastPage = true
+                    _uiState.value = currentSuccess.copy(isLoadingMore = false, isLastPage = true)
                 } else {
                     currentBooks.addAll(newBooks)
-                    _uiState.value = HomeUiState.Success(currentBooks.toList())
+                    _uiState.value = HomeUiState.Success(
+                        books = currentBooks.toList(),
+                        isLoadingMore = false,
+                        isLastPage = false
+                    )
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 currentOffset -= 20
+                _uiState.value = currentSuccess.copy(isLoadingMore = false)
             } finally {
                 isLoadingMore = false
             }

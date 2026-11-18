@@ -147,6 +147,7 @@ fun HomeScreen(
                         } else {
                             BookList(
                                 books = state.books,
+                                isLoadingMore = state.isLoadingMore,
                                 onBookClick = onBookClick,
                                 onLoadMore = { viewModel.loadNextPage() }
                             )
@@ -192,6 +193,7 @@ fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
 @Composable
 fun BookList(
     books: List<Book>,
+    isLoadingMore: Boolean,
     onBookClick: (String) -> Unit,
     onLoadMore: () -> Unit
 ) {
@@ -218,8 +220,8 @@ fun BookList(
             BookItem(book = book, onClick = { onBookClick(book.id) })
         }
 
-        item {
-            if (books.isNotEmpty()) {
+        if (isLoadingMore) {
+            item {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
