@@ -37,7 +37,7 @@ captures/
 # Gradle
 /.gradle/
 /gradle-app.setting
-gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.jar
 
 # Gradle build outputs
 **/build/
@@ -61,6 +61,7 @@ kotlin-compiler-*.log
 # === Generated files / artifacts ===
 *.class
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 *.ear
 *.nar
