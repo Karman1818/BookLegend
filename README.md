@@ -65,3 +65,24 @@ com.example.booklegend
 │   ├── theme           # Themes and Colors (Dark/Light)
 │   └── viewmodel       # ViewModels (State management)
 └── MainActivity.kt     # Entry point and navigation
+```
+
+---
+
+## 🧪 Testing
+
+The project includes both Unit and Instrumented UI tests following modern Android development practices:
+
+* **Unit Tests (`src/test`):**
+  * `BookRepositoryTest`: Verifies business logic, DTO mapping, and edge-case handling (null authors, negative cover IDs, description parsing from both String and Map formats) using a lightweight `FakeBookApi` (Google-recommended testing pattern).
+  * Run unit tests:
+    ```bash
+    ./gradlew test
+    ```
+
+* **UI & Compose Tests (`src/androidTest`):**
+  * `BookComponentsUiTest`: Tests Jetpack Compose UI components (`BookItem`, `EmptyStateView`, `ErrorView`), verifying proper rendering of titles, authors, and click callbacks using `createComposeRule()`.
+  * Run instrumented tests:
+    ```bash
+    ./gradlew connectedAndroidTest
+    ```
