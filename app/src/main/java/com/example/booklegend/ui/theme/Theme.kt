@@ -1,6 +1,8 @@
 package com.example.booklegend.ui.theme
 
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +44,12 @@ private val LightColorScheme = lightColorScheme(
     onSurfaceVariant = Color(0xFF49454F)
 )
 
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
+
 @Composable
 fun BookLegendTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -60,9 +68,11 @@ fun BookLegendTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            val activity = view.context.findActivity()
+            activity?.window?.let { window ->
+                window.statusBarColor = colorScheme.primary.toArgb()
+                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            }
         }
     }
 
