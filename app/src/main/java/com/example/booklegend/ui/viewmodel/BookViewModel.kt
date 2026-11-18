@@ -44,7 +44,7 @@ sealed interface FavoritesUiState {
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class BookViewModel(
+class BookViewModel @JvmOverloads constructor(
     application: Application,
     private val repository: BookRepository = BookRepository(),
     private val favoritesDataStore: FavoritesDataStore = FavoritesDataStore(application.applicationContext)
