@@ -176,7 +176,8 @@ fun BookDetailContentModern(
         IconButton(
             onClick = onBackClick,
             modifier = Modifier
-                .padding(top = 48.dp, start = 16.dp)
+                .statusBarsPadding()
+                .padding(top = 8.dp, start = 16.dp)
                 .align(Alignment.TopStart)
                 .background(Color.Black.copy(alpha = 0.3f), shape = RoundedCornerShape(50))
         ) {
