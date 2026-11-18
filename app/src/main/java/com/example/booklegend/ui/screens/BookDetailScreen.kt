@@ -44,25 +44,30 @@ fun BookDetailScreen(
     val favoriteIds by viewModel.favoriteIds.collectAsState()
     val isFavorite = favoriteIds.contains(bookId)
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        when (val s = state) {
-            is DetailUiState.Loading -> {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            }
-            is DetailUiState.Error -> {
-                Text(
-                    text = s.message,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-            is DetailUiState.Success -> {
-                BookDetailContentModern(
-                    details = s.details,
-                    isFavorite = isFavorite,
-                    onToggleFavorite = { viewModel.toggleFavorite(bookId) },
-                    onBackClick = onBackClick
-                )
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            when (val s = state) {
+                is DetailUiState.Loading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+                is DetailUiState.Error -> {
+                    Text(
+                        text = s.message,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                is DetailUiState.Success -> {
+                    BookDetailContentModern(
+                        details = s.details,
+                        isFavorite = isFavorite,
+                        onToggleFavorite = { viewModel.toggleFavorite(bookId) },
+                        onBackClick = onBackClick
+                    )
+                }
             }
         }
     }
@@ -77,7 +82,13 @@ fun BookDetailContentModern(
 ) {
     val scrollState = rememberScrollState()
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        val minCardHeight = (maxHeight - 280.dp).coerceAtLeast(0.dp)
+
         // Tło na samym spodzie
         Box(
             modifier = Modifier
@@ -114,7 +125,9 @@ fun BookDetailContentModern(
             Spacer(modifier = Modifier.height(280.dp))
 
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = minCardHeight),
                 shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
                 color = MaterialTheme.colorScheme.background,
                 shadowElevation = 8.dp
